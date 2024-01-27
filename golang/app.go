@@ -654,7 +654,7 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 		query,
 		me.ID,
 		mime,
-		filedata,
+		"",
 		r.FormValue("body"),
 	)
 	if err != nil {
@@ -663,6 +663,26 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pid, err := result.LastInsertId()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	ext := ""
+	if mime == "image/jpeg" {
+		ext = "jpg"
+	} else if mime == "image/png" {
+		ext = "png"
+	} else if mime == "image/gif" {
+		ext = "gif"
+	}
+
+	imageFile, err := os.Create(fmt.Sprintf("../public/image/%v.%v", pid, ext))
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	defer imageFile.Close()
+	_, err = imageFile.Write(filedata)
 	if err != nil {
 		log.Print(err)
 		return
@@ -854,7 +874,7 @@ func main() {
 	}
 
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=Local",
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=Local&interpolateParams=true",
 		user,
 		password,
 		host,
