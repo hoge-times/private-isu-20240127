@@ -42,3 +42,7 @@ nalp:
 .PHONY: pt 
 pt:
 	sudo pt-query-digest /var/log/mysql/slow.log
+
+.PHONY: log
+log:
+	journalctl -xe | grep  app.go
