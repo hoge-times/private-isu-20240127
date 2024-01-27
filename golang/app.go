@@ -667,7 +667,16 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 		return
 	}
-	imageFile, err := os.Create(fmt.Sprintf("../public/image/%v.%v", pid, mime))
+	ext := ""
+	if mime == "image/jpeg" {
+		ext = "jpg"
+	} else if mime == "image/png" {
+		ext = "png"
+	} else if mime == "image/gif" {
+		ext = "gif"
+	}
+
+	imageFile, err := os.Create(fmt.Sprintf("../public/image/%v.%v", pid, ext))
 	if err != nil {
 		log.Print(err)
 		return
