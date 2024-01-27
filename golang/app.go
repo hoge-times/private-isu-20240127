@@ -53,7 +53,7 @@ type Post struct {
 	CreatedAt    time.Time `db:"created_at"`
 	CommentCount int
 	Comments     []CommentWithUser
-	User         User
+	User         User `db:"user"`
 	CSRFToken    string
 	Hoge         string
 }
@@ -420,8 +420,8 @@ func getLogout(w http.ResponseWriter, r *http.Request) {
 func getIndex(w http.ResponseWriter, r *http.Request) {
 	me := getSessionUser(r)
 
-	results := []GetIndexPost{}
-	posts := []GetIndexPost{}
+	results := []Post{}
+	posts := []Post{}
 	err := db.Select(&results, "SELECT posts.id as id, posts.user_id as user_id, posts.body as body, "+
 		"posts.mime as mime, posts.created_at as created_at, users.id as `user.id`, "+
 		"users.account_name as `user.account_name`, users.passhash as `user.passhash`, "+
@@ -471,10 +471,10 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		getTemplPath("posts.html"),
 		getTemplPath("post.html"),
 	)).Execute(w, struct {
-		Posts     []GetIndexPost
-		Me        User
-		CSRFToken string
-		Flash     string
+		GetIndexPost []Post
+		Me           User
+		CSRFToken    string
+		Flash        string
 	}{posts, me, getCSRFToken(r), getFlash(w, r, "notice")})
 	if err != nil {
 		log.Print(err)
