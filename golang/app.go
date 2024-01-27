@@ -683,8 +683,6 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 
 	// 画像ファイルが存在するかチェック
 	f, err := os.Open(fmt.Sprintf("../public/image/%v.%v", pid, ext))
-	var image []byte
-	f.Read(image)
 	if err != nil {
 		post := Post{}
 		err = db.Get(&post, "SELECT * FROM `posts` WHERE `id` = ?", pid)
@@ -715,6 +713,12 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
+	}
+
+	image, err := io.ReadAll(f)
+	if err != nil {
+		log.Print(err)
+		return
 	}
 
 	mime := ""
