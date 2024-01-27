@@ -193,7 +193,7 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 		var query = ""
 		var comments []CommentWithUser
 		if !allComments {
-			query = "SELECT comments.id as id, comments.post_id as post_id, comments.user_id as user_id, comments.comment as comment, comments.created_at as created_at, user.account_name as account_name FROM `comments` INNER JOIN `users` ON comments.user_id = users.id WHERE `post_id` = ? ORDER BY `created_at` DESC LIMIT 3"
+			query = "SELECT comments.id as id, comments.post_id as post_id, comments.user_id as user_id, comments.comment as comment, comments.created_at as created_at, users.account_name as account_name FROM `comments` INNER JOIN `users` ON comments.user_id = users.id WHERE `post_id` = ? ORDER BY `created_at` DESC LIMIT 3"
 			err = db.Select(&comments, query, p.ID)
 			if err != nil {
 				return nil, err
@@ -202,7 +202,7 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 				comments[i], comments[j] = comments[j], comments[i]
 			}
 		} else {
-			query = "SELECT comments.id as id, comments.post_id as post_id, comments.user_id as user_id, comments.comment as comment, comments.created_at as created_at, user.account_name as account_name FROM `comments` INNER JOIN `users` ON comments.user_id = users.id WHERE `post_id` = ? ORDER BY `created_at` ASC"
+			query = "SELECT comments.id as id, comments.post_id as post_id, comments.user_id as user_id, comments.comment as comment, comments.created_at as created_at, users.account_name as account_name FROM `comments` INNER JOIN `users` ON comments.user_id = users.id WHERE `post_id` = ? ORDER BY `created_at` ASC"
 			err = db.Select(&comments, query, p.ID)
 			if err != nil {
 				return nil, err
