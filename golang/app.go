@@ -421,7 +421,7 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 	me := getSessionUser(r)
 
 	results := []GetIndexPost{}
-
+	posts := []GetIndexPost{}
 	err := db.Select(&results, "SELECT posts.id as id, posts.user_id as user_id, posts.body as body, "+
 		"posts.mime as mime, posts.created_at as created_at, users.id as `user.id`, "+
 		"users.account_name as `user.account_name`, users.passhash as `user.passhash`, "+
@@ -457,6 +457,8 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		p.Comments = comments
 
 		p.CSRFToken = getCSRFToken(r)
+
+		posts = append(posts, p)
 	}
 
 	fmap := template.FuncMap{
@@ -473,7 +475,7 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		Me        User
 		CSRFToken string
 		Flash     string
-	}{results, me, getCSRFToken(r), getFlash(w, r, "notice")})
+	}{posts, me, getCSRFToken(r), getFlash(w, r, "notice")})
 }
 
 func getAccountName(w http.ResponseWriter, r *http.Request) {
