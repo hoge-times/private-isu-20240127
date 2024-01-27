@@ -1,10 +1,14 @@
 SHELL=/bin/bash
 .PHONY: bn
 bn:
+	make re
+	/home/isucon/bench run --enable-ssl
+
+.PHONY: re
+re:
+	make arestart
 	make nrestart
 	make mrestart
-	make arestart
-	/home/isucon/bench run --enable-ssl
 
 .PHONY: arestart
 arestart:
