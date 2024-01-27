@@ -67,7 +67,7 @@ type GetIndexPost struct {
 	CreatedAt    time.Time `db:"created_at"`
 	CommentCount int
 	Comments     []CommentWithUser
-	User         User `db:"user"`
+	User         *User `db:"user"`
 	CSRFToken    string
 	Hoge         string
 }
