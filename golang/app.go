@@ -465,7 +465,7 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		"imageURL": imageURL,
 	}
 
-	template.Must(template.New("layout.html").Funcs(fmap).ParseFiles(
+	err = template.Must(template.New("layout.html").Funcs(fmap).ParseFiles(
 		getTemplPath("layout.html"),
 		getTemplPath("index.html"),
 		getTemplPath("posts.html"),
@@ -476,6 +476,10 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		CSRFToken string
 		Flash     string
 	}{posts, me, getCSRFToken(r), getFlash(w, r, "notice")})
+	if err != nil {
+		log.Print(err)
+		return
+	}
 }
 
 func getAccountName(w http.ResponseWriter, r *http.Request) {
