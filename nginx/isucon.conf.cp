@@ -4,7 +4,16 @@ server {
   client_max_body_size 10m;
   root /home/isucon/private_isu/webapp/public/;
 
+  location /image/ {
+    try_files $uri $uri/ @proxy;
+  }
+
   location / {
+    proxy_set_header Host $host;
+    proxy_pass http://localhost:8080;
+  }
+
+  location @proxy {
     proxy_set_header Host $host;
     proxy_pass http://localhost:8080;
   }
