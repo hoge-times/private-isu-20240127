@@ -679,28 +679,61 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post := Post{}
-	err = db.Get(&post, "SELECT * FROM `posts` WHERE `id` = ?", pid)
-	if err != nil {
-		log.Print(err)
-		return
-	}
-
 	ext := chi.URLParam(r, "ext")
 
-	if ext == "jpg" && post.Mime == "image/jpeg" ||
-		ext == "png" && post.Mime == "image/png" ||
-		ext == "gif" && post.Mime == "image/gif" {
-		w.Header().Set("Content-Type", post.Mime)
-		_, err := w.Write(post.Imgdata)
+	// 画像ファイルが存在するかチェック
+	f, err := os.Open(fmt.Sprintf("../public/image/%v.%v", pid, ext))
+	var image []byte
+	f.Read(image)
+	if err != nil {
+		post := Post{}
+		err = db.Get(&post, "SELECT * FROM `posts` WHERE `id` = ?", pid)
 		if err != nil {
 			log.Print(err)
 			return
 		}
+
+		// DBから取得したバイナリを画像ファイルにしておく
+		f, _ := os.Create(fmt.Sprintf("../public/image/%v.%v", pid, ext))
+		defer f.Close()
+		_, err = f.Write(post.Imgdata)
+		if err != nil {
+			log.Print(err)
+			return
+		}
+
+		if ext == "jpg" && post.Mime == "image/jpeg" ||
+			ext == "png" && post.Mime == "image/png" ||
+			ext == "gif" && post.Mime == "image/gif" {
+			w.Header().Set("Content-Type", post.Mime)
+			_, err := w.Write(post.Imgdata)
+			if err != nil {
+				log.Print(err)
+				return
+			}
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	mime := ""
+	if ext == "jpg" {
+		mime = "image/jpeg"
+	} else if ext == "png" {
+		mime = "image/png"
+	} else if ext == "gif" {
+		mime = "image/gif"
+	} else {
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	w.WriteHeader(http.StatusNotFound)
+	w.Header().Set("Content-Type", mime)
+	_, err = w.Write(image)
+	if err != nil {
+		log.Print(err)
+		return
+	}
 }
 
 func postComment(w http.ResponseWriter, r *http.Request) {
