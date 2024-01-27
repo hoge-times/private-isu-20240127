@@ -67,16 +67,9 @@ type GetIndexPost struct {
 	CreatedAt    time.Time `db:"created_at"`
 	CommentCount int
 	Comments     []CommentWithUser
-	User         struct {
-		ID          int       `db:"user_id"`
-		AccountName string    `db:"user_account_name"`
-		Passhash    string    `db:"user_passhash"`
-		Authority   int       `db:"user_authority"`
-		DelFlg      int       `db:"user_del_flg"`
-		CreatedAt   time.Time `db:"user_created_at"`
-	}
-	CSRFToken string
-	Hoge      string
+	User         User `db:"user"`
+	CSRFToken    string
+	Hoge         string
 }
 
 type Comment struct {
@@ -430,10 +423,10 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 	results := []GetIndexPost{}
 
 	err := db.Select(&results, "SELECT posts.id as id, posts.user_id as user_id, posts.body as body, "+
-		"posts.mime as mime, posts.created_at as created_at, users.id as user_id, "+
-		"users.account_name as user_account_name, users.passhash as user_passhash, "+
-		"users.authority as user_authority, users.del_flg as user_del_flg, "+
-		"users.created_at as user_created_at "+
+		"posts.mime as mime, posts.created_at as created_at, users.id as `user.id`, "+
+		"users.account_name as `user.account_name`, users.passhash as `user.passhash`, "+
+		"users.authority as `user.authority`, users.del_flg as `user.del_flg`, "+
+		"users.created_at as `user.created_at` "+
 		"FROM `posts` INNER JOIN `users` ON posts.user_id = users.id WHERE users.del_flg = 0 ORDER BY `created_at` DESC LIMIT 20")
 	if err != nil {
 		log.Print(err)
