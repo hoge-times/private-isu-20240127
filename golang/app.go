@@ -55,6 +55,7 @@ type Post struct {
 	Comments     []Comment
 	User         User
 	CSRFToken    string
+	Hoge string
 }
 
 type Comment struct {

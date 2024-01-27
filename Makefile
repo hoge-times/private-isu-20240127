@@ -8,9 +8,7 @@ bn:
 
 .PHONY: arestart
 arestart:
-	cd golang 
-	make all
-	cd ..
+	cd golang && make all
 	sudo systemctl restart isu-go.service
 
 .PHONY: nrestart
