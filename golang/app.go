@@ -58,6 +58,27 @@ type Post struct {
 	Hoge         string
 }
 
+type GetIndexPost struct {
+	ID           int       `db:"id"`
+	UserID       int       `db:"user_id"`
+	Imgdata      []byte    `db:"imgdata"`
+	Body         string    `db:"body"`
+	Mime         string    `db:"mime"`
+	CreatedAt    time.Time `db:"created_at"`
+	CommentCount int
+	Comments     []CommentWithUser
+	User         struct {
+		ID          int       `db:"user_id"`
+		AccountName string    `db:"user_account_name"`
+		Passhash    string    `db:"user_passhash"`
+		Authority   int       `db:"user_authority"`
+		DelFlg      int       `db:"user_del_flg"`
+		CreatedAt   time.Time `db:"user_created_at"`
+	}
+	CSRFToken string
+	Hoge      string
+}
+
 type Comment struct {
 	ID        int       `db:"id"`
 	PostID    int       `db:"post_id"`
@@ -406,18 +427,43 @@ func getLogout(w http.ResponseWriter, r *http.Request) {
 func getIndex(w http.ResponseWriter, r *http.Request) {
 	me := getSessionUser(r)
 
-	results := []Post{}
+	results := []GetIndexPost{}
 
-	err := db.Select(&results, "SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` ORDER BY `created_at` DESC LIMIT 30")
+	err := db.Select(&results, "SELECT posts.id as id, posts.user_id as user_id, posts.body as body, "+
+		"posts.mime as mime, posts.created_at as created_at, users.id as user_id, "+
+		"users.account_name as user_account_name, users.passhash as user_passhash, "+
+		"users.authority as user_authority, users.del_flg as user_del_flg, "+
+		"users.created_at as user_created_at "+
+		"FROM `posts` INNER JOIN `users` ON posts.user_id = users.id WHERE users.del_flg = 0 ORDER BY `created_at` DESC LIMIT 20")
 	if err != nil {
 		log.Print(err)
 		return
 	}
 
-	posts, err := makePosts(results, getCSRFToken(r), false)
-	if err != nil {
-		log.Print(err)
-		return
+	// posts, err := makePosts(results, getCSRFToken(r), false)
+	// var posts []Post
+
+	for _, p := range results {
+		err := db.Get(&p.CommentCount, "SELECT COUNT(*) AS `count` FROM `comments` WHERE `post_id` = ?", p.ID)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		var comments []CommentWithUser
+		query := "SELECT comments.id as id, comments.post_id as post_id, comments.user_id as user_id, comments.comment as comment, comments.created_at as created_at, users.account_name as account_name FROM `comments` INNER JOIN `users` ON comments.user_id = users.id WHERE `post_id` = ? ORDER BY `created_at` DESC LIMIT 3"
+		err = db.Select(&comments, query, p.ID)
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		for i, j := 0, len(comments)-1; i < j; i, j = i+1, j-1 {
+			comments[i], comments[j] = comments[j], comments[i]
+		}
+
+		p.Comments = comments
+
+		p.CSRFToken = getCSRFToken(r)
 	}
 
 	fmap := template.FuncMap{
@@ -430,11 +476,11 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 		getTemplPath("posts.html"),
 		getTemplPath("post.html"),
 	)).Execute(w, struct {
-		Posts     []Post
+		Posts     []GetIndexPost
 		Me        User
 		CSRFToken string
 		Flash     string
-	}{posts, me, getCSRFToken(r), getFlash(w, r, "notice")})
+	}{results, me, getCSRFToken(r), getFlash(w, r, "notice")})
 }
 
 func getAccountName(w http.ResponseWriter, r *http.Request) {
