@@ -52,7 +52,7 @@ type Post struct {
 	Mime         string    `db:"mime"`
 	CreatedAt    time.Time `db:"created_at"`
 	CommentCount int
-	Comments     []Comment
+	Comments     []CommentWithUser
 	User         User
 	CSRFToken    string
 	Hoge         string
@@ -65,6 +65,15 @@ type Comment struct {
 	Comment   string    `db:"comment"`
 	CreatedAt time.Time `db:"created_at"`
 	User      User
+}
+
+type CommentWithUser struct {
+	ID              int       `db:"id"`
+	PostID          int       `db:"post_id"`
+	UserID          int       `db:"user_id"`
+	Comment         string    `db:"comment"`
+	CreatedAt       time.Time `db:"created_at"`
+	UserAccountName string    `db:"account_name"`
 }
 
 func init() {
@@ -181,27 +190,38 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 			return nil, err
 		}
 
-		query := "SELECT * FROM `comments` WHERE `post_id` = ? ORDER BY `created_at` DESC"
+		var query = ""
+		var comments []CommentWithUser
 		if !allComments {
-			query += " LIMIT 3"
-		}
-		var comments []Comment
-		err = db.Select(&comments, query, p.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		for i := 0; i < len(comments); i++ {
-			err := db.Get(&comments[i].User, "SELECT * FROM `users` WHERE `id` = ?", comments[i].UserID)
+			query = "SELECT comments.id as id, comments.post_id as post_id, comments.user_id as user_id, comments.comment as comment, comments.created_at as created_at, users.account_name as account_name FROM `comments` INNER JOIN `users` ON comments.user_id = users.id WHERE `post_id` = ? ORDER BY `created_at` DESC LIMIT 3"
+			err = db.Select(&comments, query, p.ID)
+			if err != nil {
+				return nil, err
+			}
+			for i, j := 0, len(comments)-1; i < j; i, j = i+1, j-1 {
+				comments[i], comments[j] = comments[j], comments[i]
+			}
+		} else {
+			query = "SELECT comments.id as id, comments.post_id as post_id, comments.user_id as user_id, comments.comment as comment, comments.created_at as created_at, users.account_name as account_name FROM `comments` INNER JOIN `users` ON comments.user_id = users.id WHERE `post_id` = ? ORDER BY `created_at` ASC"
+			err = db.Select(&comments, query, p.ID)
 			if err != nil {
 				return nil, err
 			}
 		}
 
+		// joinしたい
+		// for i := 0; i < len(comments); i++ {
+		// 	err := db.Get(&comments[i].User, "SELECT * FROM `users` WHERE `id` = ?", comments[i].UserID)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// }
+
 		// reverse
-		for i, j := 0, len(comments)-1; i < j; i, j = i+1, j-1 {
-			comments[i], comments[j] = comments[j], comments[i]
-		}
+		// order by したい
+		// for i, j := 0, len(comments)-1; i < j; i, j = i+1, j-1 {
+		// 	comments[i], comments[j] = comments[j], comments[i]
+		// }
 
 		p.Comments = comments
 
@@ -212,6 +232,7 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 
 		p.CSRFToken = csrfToken
 
+		// sqlでいい感じにやりたい
 		if p.User.DelFlg == 0 {
 			posts = append(posts, p)
 		}
