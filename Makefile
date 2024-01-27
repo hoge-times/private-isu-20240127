@@ -10,10 +10,12 @@ bn:
 arestart:
 	cd golang && make all
 	sudo systemctl restart isu-go.service
+	sudo systemctl reload isu-go.service
 
 .PHONY: nrestart
 nrestart:
 	sudo rm /var/log/nginx/access.log
+	sudo systemctl reload nginx
 	sudo systemctl reload nginx
 
 .PHONY: mrestart
@@ -21,6 +23,7 @@ mrestart:
 	now=`date +%Y%m%d-%H%M%S`&& sudo mv /var/log/mysql/slow.log /var/log/mysql/slow.log.$now
 	sudo mysqladmin flush-logs
 	sudo systemctl mysql restart
+	sudo systemctl reload mysql
 
 .PHONY: nalp
 nalp:
