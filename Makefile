@@ -36,7 +36,7 @@ mrestart:
 # アプリのログを見る
 .PHONY: nalp
 nalp:
-	sudo cat /var/log/nginx/access.log | alp ltsv -m "/image/\d+.(jpg|png)","/posts/\d+","/\@\w+" --sort=sum --reverse --filters 'Time > TimeAgo("5m")'
+	sudo cat /var/log/nginx/access.log | alp ltsv -m "/image/\d+.(jpg|png|gif)","/posts/\d+","/\@\w+" --sort=sum --reverse --filters 'Time > TimeAgo("5m")'
 
 # mysqlのslowlogを見る
 .PHONY: pt 
