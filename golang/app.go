@@ -696,6 +696,7 @@ func getImage(w http.ResponseWriter, r *http.Request) {
 		// DBから取得したバイナリを画像ファイルにしておく
 		f, _ := os.Create(fmt.Sprintf("../public/image/%v.%v", pid, ext))
 		defer f.Close()
+		// 書き込み権限追加
 		_, err = f.Write(post.Imgdata)
 		if err != nil {
 			log.Print(err)
